@@ -12,7 +12,6 @@ router.get("/", auth, async (req, res) => {
     const contacts = await Contact.find({ user: req.user.id }).sort({
       date: -1,
     });
-
     res.json(contacts);
   } catch (err) {
     console.error(err.message);
@@ -29,12 +28,13 @@ router.post(
   [auth, [check("name", "Name is required").not().isEmpty()]],
   async (req, res) => {
     const errors = validationResult(req.body);
-
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { name, email, phone, type } = req.body;
+
+    const userId = req.user.id;
 
     try {
       const newContact = new Contact({
@@ -42,11 +42,11 @@ router.post(
         email,
         phone,
         type,
-        user: req.user.id,
+        user: userId,
       });
 
       const contact = await newContact.save();
-      res.json(contact);
+      res.status(201).json(contact);
     } catch (err) {
       console.error(err.message);
       res.status(500).send("Server Error");
